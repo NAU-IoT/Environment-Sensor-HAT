@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-
-import sys
 import time
 import math
 import struct
 import smbus
-# import ctypes
+import sys
+sys.path.append('/home/pi/.local/lib/python3.9/site-packages')
+from sensirion_gas_index_algorithm.voc_algorithm import VocAlgorithm
 
 # voc = ctypes.cdll.LoadLibrary('./voclib.so')
 
@@ -48,6 +48,7 @@ class SGP40:
     def __init__(self, address=ADDR):
         self.i2c = smbus.SMBus(1)
         self.address = address
+        self.voc_algorithm = VocAlgorithm()
         
         # feature set 0x3220
         self.write(SGP40_CMD_FEATURE_SET)    
@@ -88,13 +89,13 @@ class SGP40:
     def measureRaw(self, temperature, humidity):
         # 2*humi + CRC
         #paramh = struct.pack(">H", math.ceil(humidity * 0xffff / 100))
-        h = humidity * 0xffff / 100
+        h = int(humidity * 0xffff / 100)
         paramh = (h >> 8, h & 0xff)
         crch = self.__crc(paramh[0], paramh[1])
         
         # 2*temp + CRC
         #paramt = struct.pack(">H", math.ceil((temperature + 45) * 0xffff / 175))
-        t = (temperature + 45) * 0xffff / 175
+        t = int((temperature + 45) * 0xffff / 175)
         paramt = (t >> 8, t & 0xff)
         crct = self.__crc(paramt[0], paramt[1])
         
@@ -108,7 +109,9 @@ class SGP40:
         time.sleep(0.5)
         Rbuf = self.Read()
         # print(Rbuf)
-        return ((int(Rbuf[0]) << 8) | Rbuf[1])
+        s_voc_raw = (int(Rbuf[0]) << 8) | Rbuf[1]
+        voc_index = self.voc_algorithm.process(s_voc_raw)
+        return voc_index
         
     def __crc(self, msb, lsb):
         crc = 0xff
@@ -124,9 +127,8 @@ if __name__ == '__main__':
     time.sleep(1)
     try:
         while True:
-            # print("Raw Gas: ", sgp.raw())
+           #  print("Raw Gas: ", sgp.raw())
             print("measureRaw Gas: %d" %sgp.measureRaw(25, 50))
-            
             time.sleep(1)
 
     except KeyboardInterrupt:

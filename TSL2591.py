@@ -149,7 +149,11 @@ class TSL2591:
         # lux1 = (full - (LUX_COEFB * ir)) / self.Cpl
         # lux2 = ((LUX_COEFC * full) - (LUX_COEFD * ir)) / self.Cpl
         # return max(int(lux1), int(lux2))
-        lux = ((full-ir) * (1.00 - (ir/full))) / self.Cpl
+        try:
+            lux = ((full-ir) * (1.00 - (ir/full))) / self.Cpl
+        except ZeroDivisionError:
+        # Handle the ZeroDivisionError case here
+            lux = 0  # Set a default value or perform alternative operations
         # lux = (full-ir)/ self.Cpl
         return lux
 

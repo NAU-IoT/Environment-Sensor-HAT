@@ -9,23 +9,38 @@ import TSL2591  #LIGHT
 import SGP40
 from PIL import Image,ImageDraw,ImageFont
 import math
+import socket
+import logging
 
-def create_csv(filename, headers, directory):
-    os.makedirs(directory, exist_ok=True)
-    filepath = os.path.join(directory, filename)
-    f_exists = os.path.exists(filepath)
+# This will enable logging
+log_file = '/Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
+logging.basicConfig(filename=log_file, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
+def create_csv(filename, headers):
+    f_exists= os.path.exists(filename)
     if(f_exists):
-       return open(filepath, 'a', newline='')
+        return open(filename, 'a', newline='')
 
     else:
-         with open(filepath, 'w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=headers)
-            writer.writeheader()
-         return open(filepath, 'a', newline='')
+        with open(filename, 'w', newline='') as file:
+           writer = csv.DictWriter(file, fieldnames=headers)
+           writer.writeheader()
+        return open(filename, 'a', newline='')
+
+def create_data_path():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(script_dir, 'Data', 'csv_files')
+    os.makedirs(data_path, exist_ok=True)
+    return data_path
+
+def generate_filename(data_path):
+    now = datetime.datetime.now()
+    datestamp = now.strftime("%Y-%m-%d")
+    filename = os.path.join(data_path, "waveshare-" + datestamp + ".csv")
+    return filename
 
 def main():
-    directory = "csv_files"
+    logging.info("Starting the program...")
 
     bme280 = BME280.BME280()
     bme280.get_calib_param()
@@ -34,19 +49,19 @@ def main():
     sgp = SGP40.SGP40()
     icm20948 = ICM20948.ICM20948()
 
-    now = datetime.datetime.now()
+    system_hostname = socket.gethostname()
 
-    datestamp = now.strftime("%Y-%m-%d")
-    filename = os.path.join("waveshare-" + datestamp + ".csv")
-    headers = [ 'timestamp', 'pressure', 'temp', 'hum', 'lux', 'uv', 'gas', 'roll', 'pitch', 'yaw', 'acceleration_x', 'acceleration_y', 'acceleration_z', 'gyroscope_x', 'gyroscope_y', 'gyroscope_z', 'magnetic_x', 'magnetic_y', 'magnetic_z' ]
+    headers = ['timestamp', 'hosts', 'pressure (hPa)', 'temp (\u00b0C)', 'hum (%RH)', 'light (lux)', 'uv (nm)', 'gas (ppm ethanol equiv.)', 'roll (\u00b0)', 'pitch (\u00b0)', 'yaw (\u00b0)', 'acceleration_x (g)', 'acceleration_y (g)', 'acceleration_z (g)', 'gyroscope_x (\u00b0/sec)', 'gyroscope_y (\u00b0/sec)', 'gyroscope_z (\u00b0/sec)', 'magnetic_x (\u00b5T)', 'magnetic_y (\u00b5T)', 'magnetic_z (\u00b5T)']
 
-    csvfile =  create_csv(filename, headers, directory)
+    data_path = create_data_path()
+    filename = generate_filename(data_path)
+    csvfile =  create_csv(filename, headers)
     writer = csv.DictWriter(csvfile, fieldnames=headers)
 
-
     try:
-        while True:
-            current_time = datetime.datetime.now().strftime("%H:%M:%S")
+            logging.info("Reading sensor data...")
+
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             time.sleep(1)
             bme = bme280.readData()
             pressure = round(bme[0], 2)
@@ -54,35 +69,38 @@ def main():
             hum = round(bme[2], 2)
             lux = round(light.Lux(), 2)
             UVS = uv.UVS()
-            gas = round(sgp.raw(), 2)
+            gas = round(sgp.measureRaw(25,50), 2)
             icm = icm20948.getdata()
 
             data = {
                     'timestamp': current_time,
-                    'pressure': pressure,
-                    'temp': temp,
-                    'hum': hum,
-                    'lux': lux,
-                    'uv': UVS,
-                    'gas': gas,
-                    'roll': icm[0],
-                    'pitch': icm[1],
-                    'yaw': icm[2],
-                    'acceleration_x': icm[3],
-                    'acceleration_y': icm[4],
-                    'acceleration_z': icm[5],
-                    'gyroscope_x': icm[6],
-                    'gyroscope_y': icm[7],
-                    'gyroscope_z': icm[8],
-                    'magnetic_x': icm[9],
-                    'magnetic_y': icm[10],
-                    'magnetic_z': icm[11]
+                    'hosts': system_hostname,
+                    'pressure (hPa)': pressure,
+                    'temp (\u00b0C)': temp,
+                    'hum (%RH)': hum,
+                    'light (lux)': lux,
+                    'uv (nm)': UVS,
+                    'gas (ppm ethanol equiv.)': gas,
+                    'roll (\u00b0)': icm[0],
+                    'pitch (\u00b0)': icm[1],
+                    'yaw (\u00b0)': icm[2],
+                    'acceleration_x (g)': icm[3],
+                    'acceleration_y (g)': icm[4],
+                    'acceleration_z (g)': icm[5],
+                    'gyroscope_x (\u00b0/sec)': icm[6],
+                    'gyroscope_y (\u00b0/sec)': icm[7],
+                    'gyroscope_z (\u00b0/sec)': icm[8],
+                    'magnetic_x (\u00b5T)': icm[9],
+                    'magnetic_y (\u00b5T)': icm[10],
+                    'magnetic_z (\u00b5T)': icm[11]
                 }
+
+            logging.info("Writing data to CSV file..")
             writer.writerow(data)
 
     except KeyboardInterrupt:
         pass
 
     csvfile.close()
-
+    logging.info("Program finished.")
 main()

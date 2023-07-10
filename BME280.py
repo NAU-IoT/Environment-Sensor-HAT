@@ -147,7 +147,7 @@ if __name__ == '__main__':
         data = []
         data = sensor.readData()
         print("pressure : %7.2f hPa" %data[0])
-        print("temp : %-6.2f ℃" %data[1])
-        print("hum : %6.2f ％" %data[2])
+        print("temp : %-6.2f \u00b0C" %data[1])
+        print("hum : %6.2f RH" %data[2])
     except KeyboardInterrupt:
         pass
