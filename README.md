@@ -35,7 +35,7 @@ A quick synopsis of the Enviornment Sensor HAT:
      ```
      docker volume create --driver local \
          --opt type=none \
-         --opt device=/PATHWAY/TO/LOCAL/DIR \
+         --opt device=/PATHWAY/TO/Data/SensorV \
          --opt o=bind \
          YOUR_VOLUME_NAME
     
