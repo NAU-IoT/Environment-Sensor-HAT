@@ -14,7 +14,7 @@ import logging
 import subprocess
 
 # This will enable logging
-log_file = 'Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
+log_file = '/Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
 logging.basicConfig(filename=log_file, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
 def create_csv(filename, headers):
