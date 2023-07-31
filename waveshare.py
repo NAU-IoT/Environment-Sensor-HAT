@@ -11,9 +11,10 @@ from PIL import Image,ImageDraw,ImageFont
 import math
 import socket
 import logging
+import subprocess
 
 # This will enable logging
-log_file = '/Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
+log_file = '/home/pi/Work/Waveshare/Environment_Sensor_HAT_Code/Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
 logging.basicConfig(filename=log_file, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
 def create_csv(filename, headers):
@@ -51,7 +52,7 @@ def main():
 
     system_hostname = socket.gethostname()
 
-    headers = ['timestamp', 'hosts', 'pressure (hPa)', 'temp (\u00b0C)', 'hum (%RH)', 'light (lux)', 'uv (nm)', 'gas (ppm ethanol equiv.)', 'roll (\u00b0)', 'pitch (\u00b0)', 'yaw (\u00b0)', 'acceleration_x (g)', 'acceleration_y (g)', 'acceleration_z (g)', 'gyroscope_x (\u00b0/sec)', 'gyroscope_y (\u00b0/sec)', 'gyroscope_z (\u00b0/sec)', 'magnetic_x (\u00b5T)', 'magnetic_y (\u00b5T)', 'magnetic_z (\u00b5T)']
+    headers = ['timestamp', 'hosts', 'pressure (hPa)', 'temp (\u00b0C)', 'hum (%RH)', 'light (lux)', 'uv (nm)', 'gas (VOC index)', 'roll (\u00b0)', 'pitch (\u00b0)', 'yaw (\u00b0)', 'acceleration_x (g)', 'acceleration_y (g)', 'acceleration_z (g)', 'gyroscope_x (\u00b0/sec)', 'gyroscope_y (\u00b0/sec)', 'gyroscope_z (\u00b0/sec)', 'magnetic_x (\u00b5T)', 'magnetic_y (\u00b5T)', 'magnetic_z (\u00b5T)']
 
     data_path = create_data_path()
     filename = generate_filename(data_path)
@@ -69,9 +70,12 @@ def main():
             hum = round(bme[2], 2)
             lux = round(light.Lux(), 2)
             UVS = uv.UVS()
-            gas = round(sgp.measureRaw(25,50), 2)
-            icm = icm20948.getdata()
+            gas_bytes = subprocess.check_output(["python3", "/home/pi/Work/Waveshare/Environment_Sensor_HAT_Code/SGP40.py"])
+            gas_str = gas_bytes.decode('utf-8').strip()
 
+            print("gas str:", gas_str)
+            icm = icm20948.getdata()
+            
             data = {
                     'timestamp': current_time,
                     'hosts': system_hostname,
@@ -80,7 +84,7 @@ def main():
                     'hum (%RH)': hum,
                     'light (lux)': lux,
                     'uv (nm)': UVS,
-                    'gas (ppm ethanol equiv.)': gas,
+                    'gas (VOC index)': gas_str,
                     'roll (\u00b0)': icm[0],
                     'pitch (\u00b0)': icm[1],
                     'yaw (\u00b0)': icm[2],
