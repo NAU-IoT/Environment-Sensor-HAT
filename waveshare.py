@@ -14,7 +14,7 @@ import logging
 import subprocess
 
 # This will enable logging
-log_file = '/home/pi/Work/Waveshare/Environment_Sensor_HAT_Code/Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
+log_file = 'Data/logs/waveshare-{}.log'.format(datetime.datetime.now().strftime('%Y%m%d'))
 logging.basicConfig(filename=log_file, level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 
 def create_csv(filename, headers):
@@ -70,7 +70,7 @@ def main():
             hum = round(bme[2], 2)
             lux = round(light.Lux(), 2)
             UVS = uv.UVS()
-            gas_bytes = subprocess.check_output(["python3", "/home/pi/Work/Waveshare/Environment_Sensor_HAT_Code/SGP40.py"])
+            gas_bytes = subprocess.check_output(["python3", "/SGP40.py"])
             gas_str = gas_bytes.decode('utf-8').strip()
 
             print("gas str:", gas_str)
