@@ -1,3 +1,4 @@
+
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
 import time
@@ -5,6 +6,7 @@ import math
 import struct
 import smbus
 import sys
+from BME280 import BME280
 sys.path.append('/home/pi/.local/lib/python3.9/site-packages')
 from sensirion_gas_index_algorithm.voc_algorithm import VocAlgorithm
 
@@ -48,8 +50,10 @@ class SGP40:
     def __init__(self, address=ADDR):
         self.i2c = smbus.SMBus(1)
         self.address = address
-        self.voc_algorithm = VocAlgorithm()
-        
+#        self.voc_algorithm = VocAlgorithm()
+        self.bme280_sensor = BME280()  # Create an instance of the BME280 sensor
+        self.bme280_sensor.get_calib_param()
+
         # feature set 0x3220
         self.write(SGP40_CMD_FEATURE_SET)    
         time.sleep(0.25)
@@ -85,51 +89,72 @@ class SGP40:
         time.sleep(0.25)
         Rbuf = self.Read()
         return ((int(Rbuf[0]) << 8) | Rbuf[1])
-        
-    def measureRaw(self, temperature, humidity):
-        # 2*humi + CRC
-        #paramh = struct.pack(">H", math.ceil(humidity * 0xffff / 100))
-        h = int(humidity * 0xffff / 100)
-        paramh = (h >> 8, h & 0xff)
-        crch = self.__crc(paramh[0], paramh[1])
-        
-        # 2*temp + CRC
-        #paramt = struct.pack(">H", math.ceil((temperature + 45) * 0xffff / 175))
-        t = int((temperature + 45) * 0xffff / 175)
-        paramt = (t >> 8, t & 0xff)
-        crct = self.__crc(paramt[0], paramt[1])
-        
-        WITH_HUM_COMP[2:3] = paramh
-        WITH_HUM_COMP[4] = int(crch)
-        WITH_HUM_COMP[5:6] = paramt
-        WITH_HUM_COMP[7] = int(crct)
-        #print(WITH_HUM_COMP)
-        self.write_block(WITH_HUM_COMP)
-        
-        time.sleep(0.5)
-        Rbuf = self.Read()
-        # print(Rbuf)
-        s_voc_raw = (int(Rbuf[0]) << 8) | Rbuf[1]
-        voc_index = self.voc_algorithm.process(s_voc_raw)
-        return voc_index
-        
+
+    def measureRaw(self):
+        try:
+           pressure, temperature, humidity = self.bme280_sensor.readData()
+           # Convert temperature and humidity to integer values for SGP40 algorithm
+           temperature = round(temperature, 2)
+           humidity = round(humidity, 2)
+
+           t = int(temperature * 100)
+           h = int(humidity * 100)
+
+           # Calculate the 2*humi + CRC part
+           paramh = (h >> 8, h & 0xff)
+           crch = self.__crc(paramh[0], paramh[1])
+
+           # Calculate the 2*temp + CRC part
+           paramt = (t >> 8, t & 0xff)
+           crct = self.__crc(paramt[0], paramt[1])
+
+           WITH_HUM_COMP[2:4] = paramh
+           WITH_HUM_COMP[4] = crch
+
+           # Update the WITH_HUM_COMP list with temperature and CRC values
+           WITH_HUM_COMP[5:7] = paramt
+           WITH_HUM_COMP[7] = crct
+
+           self.write_block(WITH_HUM_COMP)
+           time.sleep(0.5)
+           Rbuf = self.Read()
+           s_voc_raw = (int(Rbuf[0]) << 8) | Rbuf[1]
+           print("Raw VOC Signal:", s_voc_raw)
+           return s_voc_raw
+
+        except OSError as e:
+            # Catch OSError that may occur during I2C communication
+            print(f"I2C Communication Error: {e}")
+            return None
+
+        except Exception as e:
+            # Catch other unexpected exceptions
+            print(f"An unexpected error occurred: {e}")
+            return None
+
     def __crc(self, msb, lsb):
         crc = 0xff
         crc ^= msb
-        crc = CRC_TABLE[crc]
+        crc = CRC_TABLE[crc % 256]
         if lsb is not None:
-            crc ^= lsb
-            crc = CRC_TABLE[crc]
+           crc ^= lsb
+           crc = CRC_TABLE[crc % 256]
         return crc
 
 if __name__ == '__main__':
     sgp = SGP40()
     time.sleep(1)
+    voc_algorithm = VocAlgorithm()
     try:
         while True:
-           #  print("Raw Gas: ", sgp.raw())
-            print("measureRaw Gas: %d" %sgp.measureRaw(25, 50))
+            pressure, temperature, humidity = sgp.bme280_sensor.readData()
+            s_voc_raw = sgp.measureRaw()
+            voc_index = voc_algorithm.process(s_voc_raw)
+            print("Temperature:", temperature, "°C")
+            print("Humidity:", humidity, "%RH")
+            print("VOC Index:", voc_index)
             time.sleep(1)
 
     except KeyboardInterrupt:
         exit()
+
