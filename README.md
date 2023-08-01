@@ -6,7 +6,7 @@ A quick synopsis of the Enviornment Sensor HAT:
   - Sensors Onboard:
       - TSL25911FN digital ambient light sensor, for measuring IR and visible light
       - BME280 sensor, for measuring temperature, humidity, and air pressure
-      - MPU9250 motion sensor, accelerometer, gyroscope, and magnetometer
+      - ICM20948 motion sensor, accelerometer, gyroscope, and magnetometer
       - LTR390-UV-1 sensor, for measuring UV rays
       - SGP40 sensor, for detecting ambient VOC
    
