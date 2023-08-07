@@ -21,7 +21,7 @@ A quick synopsis of the Enviornment Sensor HAT:
      ```
    - Change into the directory:
      ```
-     cd Enviornment-Sensor-HAT/
+     cd Environment-Sensor-HAT/
      ```
    - Build the docker image:
      ```
