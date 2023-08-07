@@ -1,1 +1,1 @@
- */5 * * * * root /waveshare.sh
+ * * * * * root /waveshare.sh
