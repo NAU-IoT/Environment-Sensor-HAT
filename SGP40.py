@@ -158,8 +158,8 @@ class SGP40:
 #               print("Humidity:", humidity, "%RH")
 #               print("VOC Index:", voc_index)
                 time.sleep(1)
-            print(voc_index)
-#           return voc_index
+#           print(voc_index)
+            return voc_index
 
         except KeyboardInterrupt:
             exit()
