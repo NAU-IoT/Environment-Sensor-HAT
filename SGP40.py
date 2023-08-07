@@ -148,7 +148,7 @@ class SGP40:
         try:
             start_time = time.time()
             while True:
-                if time.time() - start_time >= 10:
+                if time.time() - start_time >= 150:
                      break
 
                 pressure, temperature, humidity = self.bme280_sensor.readData()
