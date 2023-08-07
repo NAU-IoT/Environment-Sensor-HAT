@@ -6,7 +6,7 @@ import ICM20948 #Gyroscope/Acceleration/Magnetometer
 import BME280   #Atmospheric Pressure/Temperature and humidity
 import LTR390   #UV
 import TSL2591  #LIGHT
-import SGP40
+from SGP40 import SGP40
 from PIL import Image,ImageDraw,ImageFont
 import math
 import socket
@@ -47,7 +47,7 @@ def main():
     bme280.get_calib_param()
     light = TSL2591.TSL2591()
     uv = LTR390.LTR390()
-    sgp = SGP40.SGP40()
+    sgp = SGP40()
     icm20948 = ICM20948.ICM20948()
 
     system_hostname = socket.gethostname()
@@ -70,10 +70,8 @@ def main():
             hum = round(bme[2], 2)
             lux = round(light.Lux(), 2)
             UVS = uv.UVS()
-            gas_bytes = subprocess.check_output(["python3", "/home/pi/Work/Waveshare/Environment_Sensor_HAT_Code/SGP40.py"])
-            gas_str = gas_bytes.decode('utf-8').strip()
-
-            print("gas str:", gas_str)
+            gas = sgp.calculate_voc()
+            print("gas str:", gas)
             icm = icm20948.getdata()
             
             data = {
@@ -84,7 +82,7 @@ def main():
                     'hum (%RH)': hum,
                     'light (lux)': lux,
                     'uv (nm)': UVS,
-                    'gas (VOC index)': gas_str,
+                    'gas (VOC index)': gas,
                     'roll (\u00b0)': icm[0],
                     'pitch (\u00b0)': icm[1],
                     'yaw (\u00b0)': icm[2],

@@ -119,7 +119,7 @@ class SGP40:
            time.sleep(0.5)
            Rbuf = self.Read()
            s_voc_raw = (int(Rbuf[0]) << 8) | Rbuf[1]
-           print("Raw VOC Signal:", s_voc_raw)
+#           print("Raw VOC Signal:", s_voc_raw)
            return s_voc_raw
 
         except OSError as e:
@@ -141,20 +141,25 @@ class SGP40:
            crc = CRC_TABLE[crc % 256]
         return crc
 
-if __name__ == '__main__':
-    sgp = SGP40()
-    time.sleep(1)
-    voc_algorithm = VocAlgorithm()
-    try:
-        while True:
-            pressure, temperature, humidity = sgp.bme280_sensor.readData()
-            s_voc_raw = sgp.measureRaw()
-            voc_index = voc_algorithm.process(s_voc_raw)
-            print("Temperature:", temperature, "°C")
-            print("Humidity:", humidity, "%RH")
-            print("VOC Index:", voc_index)
-            time.sleep(1)
 
-    except KeyboardInterrupt:
-        exit()
+    def calculate_voc(self):
+        time.sleep(1)
+        voc_algorithm = VocAlgorithm()
+        try:
+            start_time = time.time()
+            while True:
+                if time.time() - start_time >= 10:
+                     break
 
+                pressure, temperature, humidity = self.bme280_sensor.readData()
+                s_voc_raw = self.measureRaw()
+                voc_index = voc_algorithm.process(s_voc_raw)
+#               print("Temperature:", temperature, "°C")
+#               print("Humidity:", humidity, "%RH")
+#               print("VOC Index:", voc_index)
+                time.sleep(1)
+            print(voc_index)
+#           return voc_index
+
+        except KeyboardInterrupt:
+            exit()
