@@ -73,11 +73,7 @@ def main():
 
             gas = sgp.calculate_voc()
             print("gas str:", gas)
-
-            gas_bytes = subprocess.check_output(["python3", "/SGP40.py"])
-            gas_str = gas_bytes.decode('utf-8').strip()
-
-            print("gas str:", gas_str)
+        
             icm = icm20948.getdata()
             
             data = {
