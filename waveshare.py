@@ -70,15 +70,14 @@ def main():
             hum = round(bme[2], 2)
             lux = round(light.Lux(), 2)
             UVS = uv.UVS()
-<<<<<<< HEAD
+
             gas = sgp.calculate_voc()
             print("gas str:", gas)
-=======
+
             gas_bytes = subprocess.check_output(["python3", "/SGP40.py"])
             gas_str = gas_bytes.decode('utf-8').strip()
 
             print("gas str:", gas_str)
->>>>>>> 440c2481ed559b296ea8233902570777478900ab
             icm = icm20948.getdata()
             
             data = {
