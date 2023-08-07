@@ -39,4 +39,12 @@ RUN chmod +x /waveshare.py
 
 RUN chmod +x /waveshare.sh
 
+RUN chmod +x /TSL2591.py
+
+RUN chmod +x /LTR390.py
+
+RUN chmod +x /SGP40.py
+
+RUN chmod +x /BME280.py
+
 CMD cron && bash
