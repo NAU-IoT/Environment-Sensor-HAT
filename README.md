@@ -94,7 +94,12 @@ A quick synopsis of the Enviornment Sensor HAT:
 * Test 4: Expose the sensor to the baseline concentration for 5 min.
 
 ## Results
-* Average household VOC index is around 100. Anything above that is less than average VOC quality, and anything below that is above average VOC quality.
+* Average household VOC index is around 100. Anything above that is less than average VOC quality, and anything below that is above average VOC quality. The range of the sensor is 0-500 VOC index.
+* Testing the baseline concentration: 120 VOC index
+* Testing the quarter concentration: 130-135 VOC index
+* Testing the half concentration: 150-155 VOC index
+* Testing the high concentration: 170-173 VOC index
+* Testing pure ethanol for calibration purposes: 480 VOC index
 
 # Resources
 Specifications, dimensions, and pin layouts can be found [here](https://www.waveshare.com/environment-sensor-hat.htm) towards the bottom of the webiste. 
